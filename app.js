@@ -39,6 +39,7 @@ var fs = require("fs"),
     Subscription = require("./models/subscription"),
     PushRequest = require("./models/pushrequest"),
     Updater = require("./lib/updater"),
+    subscribe = require("./lib/push").subscribe,
     config,
     defaults = {
         port: 4000,
@@ -315,5 +316,22 @@ async.waterfall([
             log.error(err);
         } else {
             console.log("Express server listening on address %s port %d", config.address, config.port);
+
+            // Subscribe to the firehose
+
+            if (config.firehose) {
+                Subscription.get(config.firehose, function(err, sub) {
+                    if (err || !sub) {
+                        log.info({feed: config.firehose}, "Subscribing to feed");
+                        subscribe(config.firehose, function(err, sub) {
+                            if (err) {
+                                log.error(err);
+                            } else {
+                                log.info({feed: config.firehose}, "Subscribed");
+                            }
+                        });
+                    }
+                });
+            }
         }
 });    
