@@ -24,6 +24,7 @@ var fs = require("fs"),
     DialbackClient = require("dialback-client"),
     Logger = require("bunyan"),
     routes = require('./routes'),
+    pushroutes = require('./routes/pubsubhubbub'),
     databank = require("databank"),
     uuid = require("node-uuid"),
     Databank = databank.Databank,
@@ -243,6 +244,7 @@ async.waterfall([
         app.get('/about', userAuth, userOptional, routes.about);
         app.get('/authorized/:hostname', routes.authorized);
         app.get('/.well-known/host-meta.json', routes.hostmeta);
+        app.post('/callback', pushroutes.callback);
 
         // Create a dialback client
 
