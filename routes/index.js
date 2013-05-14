@@ -41,10 +41,10 @@ exports.index = function(req, res, next) {
 
     async.waterfall([
         function(callback) {
-            bank.read("hostlist", 0, callback);
+            bank.read("hostcount", 0, callback);
         },
-        function(hostlist, callback) {
-            hosts = hostlist.length;
+        function(hc, callback) {
+            hosts = hc;
             bank.read("lasttotalcount", 0, function(err, ltc) {
                 if (err && err.name == "NoSuchThingError") {
                     users = 0;
@@ -56,7 +56,7 @@ exports.index = function(req, res, next) {
                     callback(null);
                 }
             });
-        },
+        }
     ], function(err) {
         if (err) {
             next(err);

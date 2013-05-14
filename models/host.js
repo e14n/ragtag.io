@@ -34,21 +34,16 @@ var OAUTH_RT = "http://apinamespace.org/oauth/request_token",
     OAUTH_CRED = "registration_endpoint";
 
 Host.schema = {
-    "host": {
-        pkey: "hostname",
-        fields: ["client_id",
-                 "client_secret",
-                 "registration_endpoint",
-                 "request_token_endpoint",
-                 "access_token_endpoint",
-                 "authorization_endpoint",
-                 "whoami_endpoint",
-                 "created",
-                 "updated"]
-    },
-    "hostlist": {
-        pkey: "id"
-    }
+    pkey: "hostname",
+    fields: ["client_id",
+             "client_secret",
+             "registration_endpoint",
+             "request_token_endpoint",
+             "access_token_endpoint",
+             "authorization_endpoint",
+             "whoami_endpoint",
+             "created",
+             "updated"]
 };
 
 Host.ensureHost = function(hostname, callback) {
@@ -61,6 +56,14 @@ Host.ensureHost = function(hostname, callback) {
             // XXX: update endpoints?
             callback(null, host);
         }
+    });
+};
+
+Host.prototype.afterCreate = function(callback) {
+    var bank = Host.bank();
+
+    bank.incr("hostcount", 0, function(err) {
+        callback(err);
     });
 };
 
@@ -216,6 +219,34 @@ Host.prototype.getOAuth = function() {
                      "HMAC-SHA1",
                      null, // nonce size; use default
                      {"User-Agent": "pumplive.com/0.1.0"});
+};
+
+Host.initializeCount = function(callback) {
+
+    var bank = Host.bank();
+
+    bank.read("hostcount", 0, function(err, cnt) {
+        if (!err) {
+            callback(null);
+            return;
+        }
+        if (err.name !== "NoSuchThingError") {
+            callback(err);
+            return;
+        }
+        bank.read("hostlist", 0, function(err, hosts) {
+            if (err && err.name == "NoSuchThingError") {
+                bank.create("hostcount", 0, 0, callback);
+                return;
+            }
+            if (err) {
+                callback(err);
+                return;
+            }
+            bank.create("hostcount", 0, hosts.length, callback);
+            return;
+        });
+    });
 };
 
 module.exports = Host;

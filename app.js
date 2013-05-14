@@ -103,7 +103,6 @@ _.each([RequestToken, Host, PushRequest, Subscription], function(Cls) {
 // User has a global list
 
 _.extend(config.params.schema, User.schema);
-_.extend(config.params.schema, Host.schema);
 _.extend(config.params.schema, HostCount.schema);
 _.extend(config.params.schema, TotalCount.schema);
 
@@ -113,6 +112,12 @@ async.waterfall([
     function(callback) {
         log.info({driver: config.driver, params: config.params}, "Connecting to DB");
         db.connect({}, callback);
+    },
+    function(callback) {
+        // Set global databank info
+
+        DatabankObject.bank = db;
+        Host.initializeCount(callback);
     },
     function(callback) {
 
@@ -134,10 +139,6 @@ async.waterfall([
                     next();
                 };
             };
-
-        // Set global databank info
-
-        DatabankObject.bank = db;
 
         if (_.has(config, "key")) {
 
