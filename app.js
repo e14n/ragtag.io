@@ -35,6 +35,8 @@ var fs = require("fs"),
     HostCount = require("./models/hostcount"),
     TotalCount = require("./models/totalcount"),
     PumpLive = require("./models/pumplive"),
+    Subscription = require("./models/subscription"),
+    PushRequest = require("./models/pushrequest"),
     Updater = require("./lib/updater"),
     config,
     defaults = {
@@ -92,7 +94,7 @@ _.extend(config.params.schema, DatabankStore.schema);
 
 // Now, our stuff
 
-_.each([RequestToken, Host], function(Cls) {
+_.each([RequestToken, Host, PushRequest, Subscription], function(Cls) {
     config.params.schema[Cls.type] = Cls.schema;
 });
 
