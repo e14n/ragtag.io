@@ -168,7 +168,6 @@ async.waterfall([
             app.set('views', __dirname + '/views');
             app.set('view engine', 'utml');
             app.use(requestLogger(log));
-            app.use(express.bodyParser());
             app.use(express.cookieParser());
             app.use(express.methodOverride());
             app.use(express.session({secret: (_(config).has('sessionSecret')) ? config.sessionSecret : "insecure",
@@ -239,14 +238,16 @@ async.waterfall([
 
         log.info("Initializing routes");
 
+        var bp = express.bodyParser();
+
         app.get('/', userAuth, userOptional, routes.index);
         app.get('/login', userAuth, noUser, routes.login);
-        app.post('/login', userAuth, noUser, routes.handleLogin);
-        app.post('/logout', userAuth, userRequired, routes.handleLogout);
+        app.post('/login', bp, userAuth, noUser, routes.handleLogin);
+        app.post('/logout', bp, userAuth, userRequired, routes.handleLogout);
         app.get('/about', userAuth, userOptional, routes.about);
         app.get('/authorized/:hostname', routes.authorized);
         app.get('/.well-known/host-meta.json', routes.hostmeta);
-        app.post('/callback', pushroutes.callback);
+        app.post('/callback', pushroutes.subCallback);
 
         // Create a dialback client
 
