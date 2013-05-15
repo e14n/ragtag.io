@@ -351,6 +351,8 @@ async.waterfall([
                                 log.info({feed: config.firehose}, "Subscribed");
                             }
                         });
+                    } else {
+                        log.info({feed: sub.topic}, "Already subscribed to feed");
                     }
                 });
             }

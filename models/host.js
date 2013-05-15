@@ -62,7 +62,7 @@ Host.ensureHost = function(hostname, callback) {
 Host.prototype.afterCreate = function(callback) {
     var bank = Host.bank();
 
-    bank.incr("hostcount", 0, function(err) {
+    bank.incr("hosttotal", 0, function(err) {
         callback(err);
     });
 };
@@ -225,7 +225,7 @@ Host.initializeCount = function(callback) {
 
     var bank = Host.bank();
 
-    bank.read("hostcount", 0, function(err, cnt) {
+    bank.read("hosttotal", 0, function(err, cnt) {
         if (!err) {
             callback(null);
             return;
@@ -236,14 +236,14 @@ Host.initializeCount = function(callback) {
         }
         bank.read("hostlist", 0, function(err, hosts) {
             if (err && err.name == "NoSuchThingError") {
-                bank.create("hostcount", 0, 0, callback);
+                bank.create("hosttotal", 0, 0, callback);
                 return;
             }
             if (err) {
                 callback(err);
                 return;
             }
-            bank.create("hostcount", 0, hosts.length, callback);
+            bank.create("hosttotal", 0, hosts.length, callback);
             return;
         });
     });

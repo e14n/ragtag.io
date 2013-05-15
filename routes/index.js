@@ -41,7 +41,7 @@ exports.index = function(req, res, next) {
 
     async.waterfall([
         function(callback) {
-            bank.read("hostcount", 0, callback);
+            bank.read("hosttotal", 0, callback);
         },
         function(hc, callback) {
             hosts = hc;
