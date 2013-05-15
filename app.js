@@ -108,6 +108,26 @@ _.extend(config.params.schema, TotalCount.schema);
 
 var db = Databank.get(config.driver, config.params);
 
+// We overwrite the default JSON parser to store the raw body to allow checking the 
+// HMAC signature
+
+express.bodyParser.parse['application/json'] = function(req, options, fn) {
+    var buf = "";
+    req.setEncoding("utf8");
+    req.on("data", function(chunk) { 
+        buf += chunk; 
+    });
+    req.on("end", function(){
+        req.rawBody = buf;
+        try {
+            req.body = buf.length ? JSON.parse(buf) : {};
+            fn();
+        } catch (err) {
+            fn(err);
+        }
+    });
+};
+
 async.waterfall([
     function(callback) {
         log.info({driver: config.driver, params: config.params}, "Connecting to DB");
@@ -168,6 +188,7 @@ async.waterfall([
             app.set('views', __dirname + '/views');
             app.set('view engine', 'utml');
             app.use(requestLogger(log));
+            app.use(express.bodyParser());
             app.use(express.cookieParser());
             app.use(express.methodOverride());
             app.use(express.session({secret: (_(config).has('sessionSecret')) ? config.sessionSecret : "insecure",
@@ -238,12 +259,10 @@ async.waterfall([
 
         log.info("Initializing routes");
 
-        var bp = express.bodyParser();
-
         app.get('/', userAuth, userOptional, routes.index);
         app.get('/login', userAuth, noUser, routes.login);
-        app.post('/login', bp, userAuth, noUser, routes.handleLogin);
-        app.post('/logout', bp, userAuth, userRequired, routes.handleLogout);
+        app.post('/login', userAuth, noUser, routes.handleLogin);
+        app.post('/logout', userAuth, userRequired, routes.handleLogout);
         app.get('/about', userAuth, userOptional, routes.about);
         app.get('/authorized/:hostname', routes.authorized);
         app.get('/.well-known/host-meta.json', routes.hostmeta);
