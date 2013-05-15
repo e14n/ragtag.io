@@ -14,11 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var async = require("async"),
+var urlparse = require("url").parse,
+    async = require("async"),
     express = require("express"),
     bodyParser = express.bodyParser,
     _ = require("underscore"),
     crypto = require("crypto"),
+    Host = require("../models/host"),
     PushRequest = require("../models/pushrequest"),
     Subscription = require("../models/subscription");
 
@@ -46,26 +48,16 @@ var subCallback = function(req, res) {
 
 var verifySubscription = function(req, res) {
 
-    var parse = bodyParser.parse["application/x-www-form-urlencoded"],
-        showError = function(message) {
-            res.writeHead(404, {"Content-Type": "text/plain"});
-            res.end("Suck it loser");
-        },
-        params,
+    var params,
         verify_token;
 
     req.log.info("Verifying subscription.");
 
     async.waterfall([
         function(callback) {
-            parse(req, {}, callback);
-        },
-        function(callback) {
             params = req.body;
             verify_token = params["hub.verify_token"];
-
             req.log.info(params, "Subscription");
-
             PushRequest.get(verify_token, callback);
         },
         function(pushreq, callback) {
@@ -93,10 +85,6 @@ var receiveContent = function(req, res) {
 
     async.waterfall([
         function(callback) {
-            parseJSON(req, callback);
-        },
-        function(callback) {
-
             var i, notice, topic, sub, sig;
 
             if (!_(req.body).has("items") || 
@@ -148,27 +136,8 @@ var receiveContent = function(req, res) {
             res.end("Suck it loser");
         } else {
             _.each(req.body.items, function(item) {
-                deliverPayload(item.payload);
+                deliverPayload(item.payload, req.log);
             });
-        }
-    });
-};
-
-// Snagged from express.bodyParser; grab the raw body so we can check the sig
-
-var parseJSON = function(req, fn) {
-    var buf = "";
-    req.setEncoding("utf8");
-    req.on("data", function(chunk) { 
-        buf += chunk; 
-    });
-    req.on("end", function(){
-        req.rawBody = buf;
-        try {
-            req.body = buf.length ? JSON.parse(buf) : {};
-            fn();
-        } catch (err) {
-            fn(err);
         }
     });
 };
@@ -179,8 +148,25 @@ var hmacSig = function(message, secret) {
     return hmac.digest("hex");
 };
 
-var deliverPayload = function(payload) {
-    console.dir(payload);
+var deliverPayload = function(activity, log) {
+
+    var parsed;
+
+    if (!activity.actor || !activity.actor.url) {
+        return;
+    }
+
+    // XXX: Check other URLs, like to: and cc: 
+
+    parsed = urlparse(activity.actor.url);
+
+    Host.ensureHost(parsed.hostname, function(err, host) {
+        if (err) {
+            log.error(err);
+        } else {
+            log.info({activity: activity.id}, "Successfully handled activity.");
+        }
+    });
 };
 
 exports.subCallback = subCallback;
