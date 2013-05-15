@@ -26,6 +26,8 @@ var subCallback = function(req, res) {
 
     var contentType = req.headers["content-type"];
 
+    req.log.info("PuSH callback called.");
+
     // Verify
 
     if (contentType === "application/x-www-form-urlencoded") {
@@ -52,6 +54,8 @@ var verifySubscription = function(req, res) {
         params,
         verify_token;
 
+    req.log.info("Verifying subscription.");
+
     async.waterfall([
         function(callback) {
             parse(req, {}, callback);
@@ -59,6 +63,8 @@ var verifySubscription = function(req, res) {
         function(callback) {
             params = req.body;
             verify_token = params["hub.verify_token"];
+
+            req.log.info(params, "Subscription");
 
             PushRequest.get(verify_token, callback);
         },
@@ -82,6 +88,8 @@ var verifySubscription = function(req, res) {
 };
 
 var receiveContent = function(req, res) {
+
+    req.log.info("Receiving content.");
 
     async.waterfall([
         function(callback) {
@@ -110,15 +118,32 @@ var receiveContent = function(req, res) {
         },
         function(sub, callback) {
 
-            var sig = req.headers["x-hub-signature"];
+            var sigHeader = req.headers["x-hub-signature"],
+                sig,
+                calculated;
 
-            if (!sig || sig !== hmacSig(req.rawBody, sub.secret)) {
-                callback(new Error("Bad signature"));
+            if (!sigHeader) {
+                callback(new Error("Unsigned message"));
                 return;
+            }
+
+            // Header starts with 'sha1='; trim that out
+
+            sig = sigHeader.substr(5);
+
+            // Calculate the actual signature
+
+            calculated = hmacSig(req.rawBody, sub.secret);            
+
+            if (!sig || sig !== calculated) {
+                callback(new Error("Bad signature; '" + sig + "' != '" + calculated + "'"));
+            } else {
+                callback(null);
             }
         }
     ], function(err) {
         if (err) {
+            req.log.error(err);
             res.writeHead(404, {"Content-Type": "text/plain"});
             res.end("Suck it loser");
         } else {
@@ -155,5 +180,7 @@ var hmacSig = function(message, secret) {
 };
 
 var deliverPayload = function(payload) {
-    // NOOP
+    console.dir(payload);
 };
+
+exports.subCallback = subCallback;
