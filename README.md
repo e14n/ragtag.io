@@ -1,5 +1,4 @@
-# Pump live
+ragtag.io
+=========
 
-*stats server for the social web*
-
-Running at http://pumplive.com shows stats for the pump.io network.
+ragtag.io tag search server for the pump network
