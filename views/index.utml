@@ -1,20 +1,23 @@
 <div class="hero-unit">
 
-  <h1>Pump live!</h1>
+    <div class="row">
 
-  <p>This is the stats server for the social web.</p>
+      <div class="span6">
 
-</div>
+        <h1>ragtag.io</h1>
 
-<div class="row">
-  <div class="span4">
-  <h2>Number of hosts</h2>
+        <p>Tag search for the pump network</p>
 
-  <p><%- hosts %></p>
-  </div>
-  <div class="span4">
-  <h2>Number of users</h2>
+        <p><a class="btn btn-primary" href="/login">Tag up&apos; &raquo;</a></p>
 
-  <p><%- users %></p>
-  </div>
+      </div>
+      
+      <div class="span4">
+
+        <img src="/images/Number_sign.svg" width="320" height="320" class="img-rounded">
+
+      </div>
+
+    </div>
+
 </div>

@@ -22,7 +22,7 @@ var _ = require("underscore"),
     qs = require("querystring"),
     OAuth = require("oauth").OAuth,
     DatabankObject = require("databank").DatabankObject,
-    PumpLive = require("./pumplive"),
+    RagtagIO = require("./ragtag-io"),
     RequestToken = require("./requesttoken");
 
 var Host = DatabankObject.subClass("host");
@@ -115,10 +115,10 @@ Host.getCredentials = function(endpoint, callback) {
             var body = qs.stringify({type: "client_associate",
                                      application_type: "web",
                                      application_name: "Pump Live",
-                                     redirect_uris: PumpLive.url("/authorized")});
+                                     redirect_uris: RagtagIO.url("/authorized")});
 
             Host.dialbackClient.post(endpoint,
-                                     PumpLive.hostname,
+                                     RagtagIO.hostname,
                                      body,
                                      "application/x-www-form-urlencoded",
                                      callback);
@@ -215,7 +215,7 @@ Host.prototype.getOAuth = function() {
                      host.client_id,
                      host.client_secret,
                      "1.0",
-                     PumpLive.url("/authorized/"+host.hostname),
+                     RagtagIO.url("/authorized/"+host.hostname),
                      "HMAC-SHA1",
                      null, // nonce size; use default
                      {"User-Agent": "pumplive.com/0.1.0"});

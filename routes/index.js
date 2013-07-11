@@ -23,53 +23,30 @@ var wf = require("webfinger"),
     User = require("../models/user"),
     Host = require("../models/host"),
     RequestToken = require("../models/requesttoken"),
-    PumpLive = require("../models/pumplive");
+    RagtagIO = require("../models/ragtag-io");
 
 exports.hostmeta = function(req, res) {
     res.json({
         links: [
             {
                 rel: "dialback",
-                href: PumpLive.url("/dialback")
+                href: RagtagIO.url("/dialback")
             }
         ]
     });
 };
 
 exports.index = function(req, res, next) {
-    var hosts, users, bank = Host.bank();
+    res.render('index', { title: "Home"});
+};
 
-    async.waterfall([
-        function(callback) {
-            bank.read("hosttotal", 0, callback);
-        },
-        function(hc, callback) {
-            hosts = hc;
-            bank.read("lasttotalcount", 0, function(err, ltc) {
-                if (err && err.name == "NoSuchThingError") {
-                    users = 0;
-                    callback(null);
-                } else if (err) {
-                    callback(err);
-                } else {
-                    users = ltc.count;
-                    callback(null);
-                }
-            });
-        }
-    ], function(err) {
-        if (err) {
-            next(err);
-        } else if (req.user) {
-            res.render('userindex', { title: "Pump Live", user: req.user, users: users, hosts: hosts });
-        } else {
-            res.render('index', { title: "Pump Live", users: users, hosts: hosts });
-        }
-    });
+exports.tag = function(req, res, next) {
+    var tag = req.params.tag;
+    res.render('tag', { title: "Items tagged with " + tag, tag: tag });
 };
 
 exports.about = function(req, res) {
-    res.render('about', { title: 'About Pump Live' });
+    res.render('about', { title: 'About' });
 };
 
 exports.login = function(req, res) {

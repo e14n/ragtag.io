@@ -19,7 +19,7 @@
 var _ = require("underscore"),
     async = require("async"),
     DatabankObject = require("databank").DatabankObject,
-    PumpLive = require("./pumplive");
+    RagtagIO = require("./ragtag-io");
 
 var Subscription = DatabankObject.subClass("subscription");
 

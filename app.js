@@ -33,12 +33,9 @@ var fs = require("fs"),
     RequestToken = require("./models/requesttoken"),
     User = require("./models/user"),
     Host = require("./models/host"),
-    HostCount = require("./models/hostcount"),
-    TotalCount = require("./models/totalcount"),
-    PumpLive = require("./models/pumplive"),
+    RagtagIO = require("./models/ragtag-io"),
     Subscription = require("./models/subscription"),
     PushRequest = require("./models/pushrequest"),
-    Updater = require("./lib/updater"),
     subscribe = require("./lib/push").subscribe,
     config,
     defaults = {
@@ -46,20 +43,20 @@ var fs = require("fs"),
         address: "localhost",
         hostname: "localhost",
         driver: "disk",
-        name: "Pump Live",
-        description: "Stats server for the social web."
+        name: "ragtag.io",
+        description: "Tag search for the pump network."
     },
     log,
     logParams = {
-        name: "pumplive",
+        name: "ragtag-io",
         serializers: {
             req: Logger.stdSerializers.req,
             res: Logger.stdSerializers.res
         }
     };
 
-if (fs.existsSync("/etc/pumplive.json")) {
-    config = _.defaults(JSON.parse(fs.readFileSync("/etc/pumplive.json")),
+if (fs.existsSync("/etc/ragtag.io.json")) {
+    config = _.defaults(JSON.parse(fs.readFileSync("/etc/ragtag.io.json")),
                         defaults);
 } else {
     config = defaults;
@@ -75,11 +72,11 @@ if (config.logfile) {
 
 log = new Logger(logParams);
 
-log.info("Initializing pump live");
+log.info("Initializing ragtag.io");
 
 if (!config.params) {
     if (config.driver == "disk") {
-        config.params = {dir: "/var/lib/pumplive/"};
+        config.params = {dir: "/var/lib/ragtag-io/"};
     } else {
         config.params = {};
     }
@@ -103,8 +100,6 @@ _.each([RequestToken, Host, PushRequest, Subscription], function(Cls) {
 // User has a global list
 
 _.extend(config.params.schema, User.schema);
-_.extend(config.params.schema, HostCount.schema);
-_.extend(config.params.schema, TotalCount.schema);
 
 var db = Databank.get(config.driver, config.params);
 
@@ -260,6 +255,7 @@ async.waterfall([
         log.info("Initializing routes");
 
         app.get('/', userAuth, userOptional, routes.index);
+        app.get('/tag/:tag', userAuth, userOptional, routes.tag);
         app.get('/login', userAuth, noUser, routes.login);
         app.post('/login', userAuth, noUser, routes.handleLogin);
         app.post('/logout', userAuth, userRequired, routes.handleLogout);
@@ -276,7 +272,7 @@ async.waterfall([
             hostname: config.hostname,
             app: app,
             bank: db,
-            userAgent: "PumpLive/0.1.0"
+            userAgent: "RagtagIO/0.1.0"
         });
 
         // Configure this global object
@@ -288,13 +284,13 @@ async.waterfall([
         log.info({name: config.name, 
                   description: config.description, 
                   hostname: config.hostname},
-                 "Initializing PumpLive object");
+                 "Initializing RagtagIO object");
 
-        PumpLive.name        = config.name;
-        PumpLive.description = config.description;
-        PumpLive.hostname    = config.hostname;
+        RagtagIO.name        = config.name;
+        RagtagIO.description = config.description;
+        RagtagIO.hostname    = config.hostname;
 
-        PumpLive.protocol = (config.key) ? "https" : "http";
+        RagtagIO.protocol = (config.key) ? "https" : "http";
 
         // Let Web stuff get to config
 
@@ -309,15 +305,6 @@ async.waterfall([
                 log.info(obj);
             }
         };
-
-        // updater -- keeps the world up-to-date
-        // XXX: move to master process when clustering
-
-        log.info("Initializing updater");
-
-        app.updater = new Updater({log: log});
-
-        app.updater.start();
 
         // Start the app
 
