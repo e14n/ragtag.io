@@ -114,7 +114,7 @@ Host.getCredentials = function(endpoint, callback) {
         function(callback) {
             var body = qs.stringify({type: "client_associate",
                                      application_type: "web",
-                                     application_name: "Pump Live",
+                                     application_name: "ragtag.io",
                                      redirect_uris: RagtagIO.url("/authorized")});
 
             Host.dialbackClient.post(endpoint,
