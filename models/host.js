@@ -218,7 +218,7 @@ Host.prototype.getOAuth = function() {
                      RagtagIO.url("/authorized/"+host.hostname),
                      "HMAC-SHA1",
                      null, // nonce size; use default
-                     {"User-Agent": "pumplive.com/0.1.0"});
+                     {"User-Agent": "ragtag.io/0.1.0"});
 };
 
 Host.initializeCount = function(callback) {
